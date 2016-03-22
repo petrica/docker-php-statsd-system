@@ -14,9 +14,9 @@ class CpuAverageGauge implements InterfaceGauge
      */
     public function getGauge()
     {
-        $load = sys_getloadavg();
+        $load = $this->getLoadAverage();
 
-        $value = 0;
+        $value = null;
         if ($load && isset($load[0])) {
             $value = $load[0];
         }

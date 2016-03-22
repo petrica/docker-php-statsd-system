@@ -16,9 +16,25 @@ class CpuAverageGagugeTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetGauge()
     {
-        $gauge = new CpuAverageGauge();
-        $gauge->getGauge();
+        $gauge = $this->getMockBuilder('Petrica\StatsdSystem\Gauge\CpuAverageGauge')
+            ->setMethods(array(
+                'getLoadAverage'
+            ))
+            ->getMock();
 
-        $this->assertEquals(1, 0);
+        $gauge->expects($this->exactly(2))
+            ->method('getLoadAverage')
+            ->willReturnOnConsecutiveCalls(
+                false,
+                array(0.5, 1, 1)
+            );
+
+        $value = $gauge->getGauge();
+        // First value failed
+        $this->assertEquals(null, $value);
+
+        $value = $gauge->getGauge();
+        // Second call succeeded
+        $this->assertEquals(0.5, $value);
     }
 }
