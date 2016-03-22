@@ -90,8 +90,11 @@ class NotifyCommand extends Command
                 $statsd->gauge($key, $value);
             }
 
-            $output->writeln(print_r($this->getMetrics(), true));
-            sleep(1);
+            if ($input->getOption('verbose')) {
+                $output->writeln(print_r($this->getMetrics(), true));
+            }
+
+            sleep(60);
         }
     }
 
