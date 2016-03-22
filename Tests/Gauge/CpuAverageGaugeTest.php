@@ -19,6 +19,6 @@ class CpuAverageGagugeTest extends \PHPUnit_Framework_TestCase
         $gauge = new CpuAverageGauge();
         $gauge->getGauge();
 
-
+        $this->assertEquals(1, 0);
     }
 }
