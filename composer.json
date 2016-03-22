@@ -9,10 +9,31 @@
         {
             "name": "Petrica Martinescu",
             "email": "petrica@martinescu.com"
+        },
+        {
+            "name": "Tremend Software Consulting",
+            "homepage": "http://www.tremend.com/"
         }
     ],
+    "support": {
+        "issues": "https://github.com/petrica/php-statsd-system/issues"
+    },
     "require": {
         "domnikl/statsd": "~2.0",
         "symfony/console": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": ">= 4.8.0"
+    },
+    "bin": [
+        "statsd-console"
+    ],
+    "autoload": {
+        "psr-4" : {
+            "Petrica\\StatsdSystem\\" : ""
+        },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
     }
 }

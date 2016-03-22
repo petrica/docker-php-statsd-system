@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+// application.php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+use Petrica\StatsdSystem\Command\NotifyCommand;
+
+$application = new Application();
+$application->add(new NotifyCommand());
+$application->run();

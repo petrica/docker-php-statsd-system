@@ -32,3 +32,8 @@ sudo apt-get install -y php5-cli php5-xdebug
 # Make vagrant folder
 sudo mkdir -p /vagrant
 sudo chown vagrant.vagrant /vagrant
+
+# Make sure xdebug is working with PHPStorm
+echo -n                                 >  /etc/profile.d/xdebug.sh
+echo 'export SERVER_NAME=statsd-system' >> /etc/profile.d/xdebug.sh
+echo 'export SERVER_PORT=80'            >> /etc/profile.d/xdebug.sh
