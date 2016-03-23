@@ -10,7 +10,9 @@ namespace Petrica\StatsdSystem\Command;
 use Domnikl\Statsd\Client;
 use Domnikl\Statsd\Connection\UdpSocket;
 use Petrica\StatsdSystem\Gauge\CpuAverageGauge;
+use Petrica\StatsdSystem\Gauge\GaugeInterface;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -22,11 +24,23 @@ class NotifyCommand extends Command
      */
     protected $statsd = null;
 
+    /**
+     * Instantiated gauges
+     *
+     * @var array
+     */
+    protected $gauges = null;
+
     protected function configure()
     {
         $this
-            ->setName('statsd:notify:cpu')
-            ->setDescription('Collect and send CPU stats to statsd server')
+            ->setName('statsd:notify')
+            ->setDescription('Collect and send defined gauges to statsd server')
+            ->addArgument(
+                'gauges-class',
+                InputArgument::REQUIRED,
+                'PHP class name of gauges separate by comma eg: Petrica\StatsdSystem\Gauge\CpuAverageGauge,Petrica\StatsdSystem\Gauge\MemoryGauge'
+            )
             ->addOption(
                 'statsd-host',
                 null,
@@ -53,13 +67,7 @@ class NotifyCommand extends Command
                 null,
                 InputOption::VALUE_OPTIONAL,
                 'The number of times the job collects stats and sends them to statsd server before exiting.',
-                60
-            )
-            ->addOption(
-                'dry-run',
-                null,
-                InputOption::VALUE_NONE,
-                'Output CPU details to console. Do not send the stats to statsd server.'
+                3600
             );
     }
 
@@ -69,15 +77,7 @@ class NotifyCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $isDryRun = $input->getOption('dry-run');
-
-        if ($isDryRun) {
-            $output->writeln('Dry run, will only display the average load for the last minute.');
-
-            $output->writeln(print_r($this->getMetrics(), true));
-
-            return;
-        }
+        $gauges = $this->getGauges($input);
 
         $statsd = $this->getStatsd($input);
 
@@ -85,16 +85,22 @@ class NotifyCommand extends Command
         $count = 0;
         while($count < $iterations)
         {
-            $metrics = $this->getMetrics();
-            foreach($metrics as $key => $value) {
-                $statsd->gauge($key, $value);
+            foreach($gauges as $gauge) {
+                // Sampling period attained for current gauge?
+                if (fmod($count, $gauge->getSamplingPeriod()) == 0) {
+                    $value = $gauge->getValue();
+                    if (null !== $value) {
+                        $statsd->gauge($gauge->getPath(), $value);
+                    }
+
+                    if ($input->getOption('verbose')) {
+                        $output->writeln(sprintf('%s: %s', $gauge->getPath(), $gauge->getValue()));
+                    }
+                }
             }
 
-            if ($input->getOption('verbose')) {
-                $output->writeln(print_r($this->getMetrics(), true));
-            }
-
-            sleep(60);
+            sleep(1);
+            $count ++;
         }
     }
 
@@ -134,5 +140,43 @@ class NotifyCommand extends Command
         );
 
         return $stats;
+    }
+
+    /**
+     * Instantiate selected gauges
+     *
+     * @param InputInterface $input
+     * @return GaugeInterface[] array
+     */
+    public function getGauges(InputInterface $input)
+    {
+        if (null === $this->gauges) {
+            $this->gauges = array();
+            $proprietaryPrefix = 'Petrica\StatsdSystem\Gauge';
+            $classes = explode(',', $input->getArgument('gauges-class'));
+
+            foreach ($classes as $class) {
+                $class = trim($class);
+                $proprietaryClass = $proprietaryPrefix . '\\' . $class;
+
+                if (class_exists($proprietaryClass)) {
+                    $class = $proprietaryClass;
+                }
+
+                if (class_exists($class) &&
+                    in_array('Petrica\StatsdSystem\Gauge\GaugeInterface', class_implements($class))) {
+
+                    $this->gauges[] = new $class();
+                }
+            }
+
+            if (empty($this->gauges)) {
+                throw new \RuntimeException(
+                    sprintf('No gauges found for provided string %s', $input->getArgument('gauges-class'))
+                );
+            }
+        }
+
+        return $this->gauges;
     }
 }

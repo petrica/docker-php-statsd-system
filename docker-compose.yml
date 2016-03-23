@@ -1,0 +1,5 @@
+graphite:
+    image: hopsoft/graphite-statsd
+    ports:
+        - 8888:80
+        - 8125:8125/udp

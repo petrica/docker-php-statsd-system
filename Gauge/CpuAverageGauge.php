@@ -7,12 +7,33 @@
  */
 namespace Petrica\StatsdSystem\Gauge;
 
-class CpuAverageGauge implements InterfaceGauge
+class CpuAverageGauge implements GaugeInterface
 {
+    /**
+     * Report every 60 seconds
+     * Load average is calculated every 1 minute
+     *
+     * @return int
+     */
+    public function getSamplingPeriod()
+    {
+        return 60;
+    }
+
+    /**
+     * CPU average load path reported to statsd
+     *
+     * @return string
+     */
+    public function getPath()
+    {
+        return 'cpu.load.average';
+    }
+
     /**
      * {@inheritdoc}
      */
-    public function getGauge()
+    public function getValue()
     {
         $load = $this->getLoadAverage();
 
@@ -29,7 +50,7 @@ class CpuAverageGauge implements InterfaceGauge
      *
      * @return array
      */
-    public function getLoadAverage()
+    protected function getLoadAverage()
     {
         return sys_getloadavg();
     }
