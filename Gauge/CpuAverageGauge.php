@@ -38,7 +38,7 @@ class CpuAverageGauge implements GaugeInterface
         $load = $this->getLoadAverage();
 
         $value = null;
-        if ($load && isset($load[0])) {
+        if (!empty($load) && isset($load[0])) {
             $value = $load[0];
         }
 
