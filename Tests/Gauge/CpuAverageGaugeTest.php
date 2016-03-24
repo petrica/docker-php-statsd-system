@@ -29,11 +29,11 @@ class CpuAverageGagugeTest extends \PHPUnit_Framework_TestCase
                 array(0.5, 1, 1)
             );
 
-        $value = $gauge->getGauge();
+        $value = $gauge->getValue();
         // First value failed
         $this->assertEquals(null, $value);
 
-        $value = $gauge->getGauge();
+        $value = $gauge->getValue();
         // Second call succeeded
         $this->assertEquals(0.5, $value);
     }
