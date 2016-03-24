@@ -127,22 +127,6 @@ class NotifyCommand extends Command
     }
 
     /**
-     * Collect current metrics
-     *
-     * @return array
-     */
-    protected function getMetrics()
-    {
-        $cpuLoadGauge = new CpuAverageGauge();
-
-        $stats = array(
-            'cpu.load.average' => $cpuLoadGauge->getGauge()
-        );
-
-        return $stats;
-    }
-
-    /**
      * Instantiate selected gauges
      *
      * @param InputInterface $input
