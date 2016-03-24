@@ -16,6 +16,11 @@ System metrics collector for statsd written in PHP.
 composer require petrica/statsd-system dev-master
 ```
 
+## Requirements
+
+* Linux/Unix OS
+* PHP ^5.5
+
 ## Run with
 
 ```bash
