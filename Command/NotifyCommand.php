@@ -9,7 +9,7 @@ namespace Petrica\StatsdSystem\Command;
 
 use Domnikl\Statsd\Client;
 use Domnikl\Statsd\Connection\UdpSocket;
-use Petrica\StatsdSystem\Gauge\CpuAverageGauge;
+use Petrica\StatsdSystem\Config\ConfigLoader;
 use Petrica\StatsdSystem\Gauge\GaugeInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -31,15 +31,20 @@ class NotifyCommand extends Command
      */
     protected $gauges = null;
 
+    /**
+     * @var null
+     */
+    protected $config = null;
+
     protected function configure()
     {
         $this
             ->setName('statsd:notify')
             ->setDescription('Collect and send defined gauges to statsd server')
             ->addArgument(
-                'gauges-class',
+                'config',
                 InputArgument::REQUIRED,
-                'PHP class name of gauges separate by comma eg: Petrica\StatsdSystem\Gauge\CpuAverageGauge,Petrica\StatsdSystem\Gauge\MemoryGauge'
+                'Path to yaml configuration file.'
             )
             ->addOption(
                 'statsd-host',
@@ -77,24 +82,24 @@ class NotifyCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $gauges = $this->getGauges($input);
-
+        $config = $this->getConfiguration($input);
+        $gauges = $this->getGauges($config);
         $statsd = $this->getStatsd($input);
 
         $iterations = $input->getOption('iterations');
         $count = 0;
         while($count < $iterations)
         {
-            foreach($gauges as $gauge) {
+            foreach($gauges as $path => $gauge) {
                 // Sampling period attained for current gauge?
                 if (fmod($count, $gauge->getSamplingPeriod()) == 0) {
                     $value = $gauge->getValue();
                     if (null !== $value) {
-                        $statsd->gauge($gauge->getPath(), $value);
+                        $statsd->gauge($path, $value);
                     }
 
                     if ($input->getOption('verbose')) {
-                        $output->writeln(sprintf('%s: %s', $gauge->getPath(), $gauge->getValue()));
+                        $output->writeln(sprintf('%s: %s', $path, $gauge->getValue()));
                     }
                 }
             }
@@ -129,28 +134,31 @@ class NotifyCommand extends Command
     /**
      * Instantiate selected gauges
      *
-     * @param InputInterface $input
+     * @param array $config
      * @return GaugeInterface[] array
      */
-    public function getGauges(InputInterface $input)
+    protected function getGauges($config)
     {
         if (null === $this->gauges) {
             $this->gauges = array();
-            $proprietaryPrefix = 'Petrica\StatsdSystem\Gauge';
-            $classes = explode(',', $input->getArgument('gauges-class'));
 
-            foreach ($classes as $class) {
-                $class = trim($class);
-                $proprietaryClass = $proprietaryPrefix . '\\' . $class;
+            foreach ($config as $path => $details) {
+                $className = $details['class'];
+                if (class_exists($className)) {
+                    $reflection = new \ReflectionClass($className);
 
-                if (class_exists($proprietaryClass)) {
-                    $class = $proprietaryClass;
+                    if ($reflection->getConstructor()) {
+                        $this->gauges[$path] = $reflection->newInstanceArgs(
+                            $details['arguments'] ? $details['arguments'] : array());
+                    }
+                    else {
+                        $this->gauges[$path] = $reflection->newInstance();
+                    }
                 }
-
-                if (class_exists($class) &&
-                    in_array('Petrica\StatsdSystem\Gauge\GaugeInterface', class_implements($class))) {
-
-                    $this->gauges[] = new $class();
+                else {
+                    throw new \RuntimeException(sprintf(
+                        'Class does not exists %s'
+                    ), $className);
                 }
             }
 
@@ -162,5 +170,19 @@ class NotifyCommand extends Command
         }
 
         return $this->gauges;
+    }
+
+    /**
+     * Read Yaml configuration file
+     * and returns array map
+     *
+     * @param InputInterface $input
+     * @return array
+     */
+    protected function getConfiguration(InputInterface $input)
+    {
+        $loader = new ConfigLoader($input->getArgument('config'));
+
+        return $loader->load();
     }
 }

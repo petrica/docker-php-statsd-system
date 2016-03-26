@@ -17,13 +17,6 @@ interface GaugeInterface
     public function getSamplingPeriod();
 
     /**
-     * Return gauge path as namespace.path.to.gauge
-     *
-     * @return string
-     */
-    public function getPath();
-
-    /**
      * Return a numerical value
      *
      * @return mixed

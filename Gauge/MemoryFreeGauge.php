@@ -12,14 +12,6 @@ class MemoryFreeGauge extends AbstractMemoryGauge
     /**
      * {@inheritdoc}
      */
-    public function getPath()
-    {
-        return 'memory.free.value';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getValue()
     {
         $info = $this->getSystemMemoryInfo();

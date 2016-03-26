@@ -12,14 +12,6 @@ class MemoryTotalGauge extends AbstractMemoryGauge
     /**
      * {@inheritdoc}
      */
-    public function getPath()
-    {
-        return 'memory.total.value';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getValue()
     {
         $info = $this->getSystemMemoryInfo();

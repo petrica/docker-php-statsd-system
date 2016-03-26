@@ -21,16 +21,6 @@ class CpuAverageGauge implements GaugeInterface
     }
 
     /**
-     * CPU average load path reported to statsd
-     *
-     * @return string
-     */
-    public function getPath()
-    {
-        return 'cpu.load.average';
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function getValue()

@@ -12,14 +12,6 @@ class MemoryUsedGauge extends AbstractMemoryGauge
     /**
      * {@inheritdoc}
      */
-    public function getPath()
-    {
-        return 'memory.used.value';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getValue()
     {
         $info = $this->getSystemMemoryInfo();
