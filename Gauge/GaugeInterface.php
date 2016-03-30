@@ -7,6 +7,8 @@
  */
 namespace Petrica\StatsdSystem\Gauge;
 
+use Petrica\StatsdSystem\Collection\ValuesCollection;
+
 interface GaugeInterface
 {
     /**
@@ -19,7 +21,7 @@ interface GaugeInterface
     /**
      * Return a numerical value
      *
-     * @return mixed
+     * @return ValuesCollection
      */
-    public function getValue();
+    public function getCollection();
 }

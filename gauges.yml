@@ -1,13 +1,7 @@
 gauges:
-    cpu.load.average:
+    cpu:
         class: Petrica\StatsdSystem\Gauge\CpuAverageGauge
         arguments: ~
 
-    memory.free.value:
-        class: Petrica\StatsdSystem\Gauge\MemoryFreeGauge
-
-    memory.total.gauge:
-        class: Petrica\StatsdSystem\Gauge\MemoryTotalGauge
-
-    memory.used.gauge:
-        class: Petrica\StatsdSystem\Gauge\MemoryUsedGauge
+    memory:
+        class: Petrica\StatsdSystem\Gauge\MemoryGauge

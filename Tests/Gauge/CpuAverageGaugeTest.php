@@ -29,12 +29,21 @@ class CpuAverageGagugeTest extends \PHPUnit_Framework_TestCase
                 array(0.5, 1, 1)
             );
 
-        $value = $gauge->getValue();
+        $collection = $gauge->getCollection();
+        $values = $collection->getValues();
         // First value failed
-        $this->assertEquals(null, $value);
+        $this->assertEquals(array('load.average' => null), $values);
 
-        $value = $gauge->getValue();
+        $collection = $gauge->getCollection();
+        $values = $collection->getValues();
         // Second call succeeded
-        $this->assertEquals(0.5, $value);
+        $this->assertEquals(array('load.average' => 0.5), $values);
+    }
+
+    public function testGetSamplingPeriod()
+    {
+        $gauge = new CpuAverageGauge();
+
+        $this->assertEquals(60, $gauge->getSamplingPeriod());
     }
 }

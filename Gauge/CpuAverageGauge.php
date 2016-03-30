@@ -7,6 +7,8 @@
  */
 namespace Petrica\StatsdSystem\Gauge;
 
+use Petrica\StatsdSystem\Collection\ValuesCollection;
+
 class CpuAverageGauge implements GaugeInterface
 {
     /**
@@ -23,8 +25,10 @@ class CpuAverageGauge implements GaugeInterface
     /**
      * {@inheritdoc}
      */
-    public function getValue()
+    public function getCollection()
     {
+        $collection = new ValuesCollection();
+
         $load = $this->getLoadAverage();
 
         $value = null;
@@ -32,7 +36,7 @@ class CpuAverageGauge implements GaugeInterface
             $value = $load[0];
         }
 
-        return $value;
+        return $collection->add('load.average', $value);
     }
 
     /**

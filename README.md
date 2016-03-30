@@ -24,7 +24,7 @@ composer require petrica/statsd-system dev-master
 ## Run with
 
 ```bash
-vendor/bin/statsd-console statsd:notify --verbose CpuAverageGauge,MemoryFreeGauge,MemoryTotalGauge,MemoryUsedGauge
+vendor/bin/statsd-console statsd:notify --verbose gauges.yml 
 ```
 
 In progress!

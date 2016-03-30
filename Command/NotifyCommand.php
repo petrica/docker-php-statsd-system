@@ -93,14 +93,24 @@ class NotifyCommand extends Command
             foreach($gauges as $path => $gauge) {
                 // Sampling period attained for current gauge?
                 if (fmod($count, $gauge->getSamplingPeriod()) == 0) {
-                    $value = $gauge->getValue();
-                    if (null !== $value) {
-                        $statsd->gauge($path, $value);
+
+                    $values = $gauge->getCollection();
+
+                    $statsd->startBatch();
+
+                    foreach ($values as $key => $value) {
+                        $composed = $path . '.' . $key;
+
+                        if (null !== $value) {
+                            $statsd->gauge($composed, $value);
+                        }
+
+                        if ($input->getOption('verbose')) {
+                            $output->writeln(sprintf('%s: %s', $composed, $value));
+                        }
                     }
 
-                    if ($input->getOption('verbose')) {
-                        $output->writeln(sprintf('%s: %s', $path, $gauge->getValue()));
-                    }
+                    $statsd->endBatch();
                 }
             }
 
