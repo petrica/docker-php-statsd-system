@@ -25,9 +25,9 @@ sudo sh -c "echo 'DOCKER_OPTS=\"--dns 8.8.8.8\"' >> /etc/default/docker"
 pip install docker-compose
 
 # Install PHP5 and composer
-sudo curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin creates=/usr/local/bin/composer
-sudo mv /usr/local/bin/composer.phar /usr/local/bin/composer
 sudo apt-get install -y php5-cli php5-xdebug
+sudo curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin creates=/usr/local/bin/composer
+sudo mv /usr/local/bin/composer.phar /usr/local/bin/composer
 
 # Make vagrant folder
 sudo mkdir -p /vagrant
