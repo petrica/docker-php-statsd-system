@@ -5,3 +5,9 @@ gauges:
 
     memory:
         class: Petrica\StatsdSystem\Gauge\MemoryGauge
+
+    process:
+        class: Petrica\StatsdSystem\Gauge\ProcessesGauge
+        arguments:
+            cpu_above: 5
+            memory_above: 1

@@ -9,7 +9,9 @@ namespace Petrica\StatsdSystem\Tests\Command;
 
 use Domnikl\Statsd\Client;
 use Domnikl\Statsd\Connection\UdpSocket;
+use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
+use org\bovigo\vfs\vfsStreamFile;
 use org\bovigo\vfs\vfsStreamWrapper;
 use Petrica\StatsdSystem\Command\NotifyCommand;
 use Petrica\StatsdSystem\Gauge\CpuAverageGauge;
@@ -17,12 +19,22 @@ use Petrica\StatsdSystem\Gauge\MemoryGauge;
 
 class NotifyCommandTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * @var vfsStreamFile
+     */
+    private $validFile;
+
+    /**
+     * @var vfsStreamFile
+     */
+    private $invalidFile;
+
     public function setUp()
     {
         parent::setUp();
 
         vfsStreamWrapper::register();
-        vfsStreamWrapper::setRoot(new vfsStreamDirectory('root'));
+        $root = vfsStreamWrapper::setRoot(new vfsStreamDirectory('root'));
 
         // Create configuration yml
         $yml = <<<'DOC'
@@ -34,7 +46,11 @@ gauges:
     memory:
         class: Petrica\StatsdSystem\Gauge\MemoryGauge
 DOC;
-        file_put_contents('gauges.yml', $yml);
+
+        $this->validFile = vfsStream::newFile('gauges.yml')
+            ->withContent($yml)
+            ->at($root);
+
 
         $yml = <<<'DOC'
 gauges:
@@ -44,7 +60,9 @@ gauges:
 
     memory:
 DOC;
-        file_put_contents('wrong_gauges.yml', $yml);
+        $this->invalidFile = vfsStream::newFile('wrong_gauges.yml')
+            ->withContent($yml)
+            ->at($root);
     }
 
     public function testGetConfig()
@@ -61,7 +79,7 @@ DOC;
         $input = $this->getInputInterface();
 
         $input->method('getArgument')
-            ->willReturn('gauges.yml');
+            ->willReturn($this->validFile->url());
 
         $loader = $getConfig->invokeArgs($command, array($input));
 
@@ -78,7 +96,7 @@ DOC;
         $input = $this->getInputInterface();
 
         $input->method('getArgument')
-            ->willReturn('wrong_gauges.yml');
+            ->willReturn($this->invalidFile->url());
 
         // Test wrong configuration exception
         $this->setExpectedException('Symfony\Component\Config\Definition\Exception\InvalidConfigurationException');
