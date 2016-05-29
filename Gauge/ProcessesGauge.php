@@ -31,7 +31,7 @@ class ProcessesGauge implements GaugeInterface
      * @param float $cpuAbove
      * @param float $memoryAbove
      */
-    public function __construct($cpuAbove = 5.0, $memoryAbove = 1.0)
+    public function __construct($cpuAbove = 5.0, $memoryAbove = 1.0, $sshString, $sshIdentityFile)
     {
         $this->cpuAbove = $cpuAbove;
         $this->memoryAbove = $memoryAbove;

@@ -11,3 +11,12 @@ gauges:
         arguments:
             cpu_above: 5
             memory_above: 1
+
+    remote.process:
+        class: Petrica\StatsdSystem\Gauge\RemoteProcessesGauge
+        arguments:
+            ssh_string: user@host
+            ssh_port: 22
+            ssh_identity_file: /absolute/path/to/identity/file
+            cpu_above: 10
+            memory_above: 5
