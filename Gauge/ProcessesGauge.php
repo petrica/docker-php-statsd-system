@@ -11,6 +11,7 @@ use Petrica\StatsdSystem\Collection\ValuesCollection;
 use Petrica\StatsdSystem\Model\Process\Process;
 use Petrica\StatsdSystem\Model\Process\TopProcessParser;
 use Petrica\StatsdSystem\Model\TopCommand;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 class ProcessesGauge implements GaugeInterface
 {
@@ -22,6 +23,13 @@ class ProcessesGauge implements GaugeInterface
      * @var TopCommand
      */
     protected $command;
+
+    /**
+     * This is the cache namespace
+     *
+     * @var string
+     */
+    protected $namespace;
 
     /**
      * ProcessesGauge constructor.
@@ -37,6 +45,8 @@ class ProcessesGauge implements GaugeInterface
         $this->memoryAbove = $memoryAbove;
 
         $this->command = new TopCommand();
+
+        $this->namespace = 'statsd.localhost';
     }
 
     /**
@@ -60,7 +70,9 @@ class ProcessesGauge implements GaugeInterface
         $memory = $this->aggregateMemory($processes);
         $memory = $this->filterAbove($memory, $this->memoryAbove);
 
-        $collection = new ValuesCollection();
+        // Get previous values saved
+        $collection = $this->retrieveCollection();
+        $this->resetValues($collection);
 
         foreach ($cpu as $name => $value) {
             $collection->add($name . '.cpu.value', $value);
@@ -69,6 +81,11 @@ class ProcessesGauge implements GaugeInterface
         foreach ($memory as $name => $value) {
             $collection->add($name . '.memory.value', $value);
         }
+
+        // Persist collection to a temporary storage
+        $copyCollection = new ValuesCollection($collection->getValues());
+        $this->removeEmpty($copyCollection);
+        $this->persistCollection($copyCollection);
 
         return $collection;
     }
@@ -152,4 +169,69 @@ class ProcessesGauge implements GaugeInterface
         return $this->command;
     }
 
+    /**
+     * Persist collection values to a temporary storage
+     * key is the command string value
+     *
+     * @param $collection
+     */
+    protected function persistCollection($collection)
+    {
+        $cache = new FilesystemAdapter($this->namespace);
+        $item = $cache->getItem('collection');
+        $item->set($collection);
+        $cache->save($item);
+    }
+
+    /**\
+     * Retrieve a new collection of a previous collection
+     *
+     * @return mixed|ValuesCollection
+     */
+    protected function retrieveCollection()
+    {
+        $cache = new FilesystemAdapter($this->namespace);
+        $item = $cache->getItem('collection');
+
+        $collection = null;
+        if ($item->isHit()) {
+            $collection = $item->get('collection');
+        }
+
+        if (empty($collection) || !$collection instanceof ValuesCollection) {
+            $collection = new ValuesCollection();
+        }
+
+        return $collection;
+    }
+
+    /**
+     * Reset collection values to 0
+     *
+     * These are in fact previous collection values that needs to be sent to statsd as 0
+     *
+     * @param $collection
+     */
+    protected function resetValues($collection) {
+        foreach ($collection as $key => $value) {
+            $collection[$key] = 0;
+        }
+
+        return $collection;
+    }
+
+    /**
+     * Remove empty values from collection
+     *
+     * @param $collection
+     */
+    protected function removeEmpty($collection) {
+        foreach ($collection as $key => $value) {
+            if (empty($value)) {
+                unset($collection[$key]);
+            }
+        }
+
+        return $collection;
+    }
 }

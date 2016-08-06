@@ -42,5 +42,8 @@ class RemoteProcessesGauge extends ProcessesGauge
         $this->sshPort = $sshPort;
 
         $this->command = new RemoteTopCommand($this->sshString, $this->sshPort, $this->sshIdentityFile);
+
+
+        $this->namespace = preg_replace('/[^-+_.A-Za-z0-9]*/i', '', 'statsd.' . $this->sshString . '.' . $this->sshPort);
     }
 }
