@@ -8,7 +8,7 @@
 namespace Petrica\StatsdSystem\Tests\Command;
 
 use Domnikl\Statsd\Client;
-use Domnikl\Statsd\Connection\UdpSocket;
+use Petrica\StatsdSystem\Statsd\Connection\UdpSocket;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
 use org\bovigo\vfs\vfsStreamFile;
