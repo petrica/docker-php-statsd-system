@@ -8,9 +8,9 @@
 namespace Petrica\StatsdSystem\Command;
 
 use Domnikl\Statsd\Client;
-use Domnikl\Statsd\Connection\UdpSocket;
 use Petrica\StatsdSystem\Config\ConfigLoader;
 use Petrica\StatsdSystem\Gauge\GaugeInterface;
+use Petrica\StatsdSystem\Statsd\Connection\UdpSocket;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,6 +19,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class NotifyCommand extends Command
 {
+    /**
+     * @var UdpSocket
+     */
+    protected $statsdConnection = null;
+
     /**
      * @var Client
      */
@@ -111,6 +116,7 @@ class NotifyCommand extends Command
                     }
 
                     $statsd->endBatch();
+                    $this->closeStatsd();
                 }
             }
 
@@ -128,17 +134,27 @@ class NotifyCommand extends Command
     protected function getStatsd(InputInterface $input)
     {
         if (null === $this->statsd) {
-            $connection = new UdpSocket(
+            $this->statsdConnection = new UdpSocket(
                 $input->getOption('statsd-host'),
                 $input->getOption('statsd-port')
             );
             $this->statsd = new Client(
-                $connection,
+                $this->statsdConnection,
                 $input->getOption('statsd-namespace')
             );
         }
 
         return $this->statsd;
+    }
+
+    /**
+     * Close statsd opened connection
+     */
+    protected function closeStatsd()
+    {
+        if (null != $this->statsdConnection) {
+            $this->statsdConnection->close();
+        }
     }
 
     /**
